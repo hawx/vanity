@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"net"
 	"net/http"
 	"os"
 	"sort"
@@ -18,6 +17,7 @@ import (
 var (
 	port   = flag.String("port", "8080", "")
 	socket = flag.String("socket", "", "")
+	host   = flag.String("host", "", "")
 )
 
 type configRow struct {
@@ -29,7 +29,7 @@ func (c Config) Len() int           { return len(c) }
 func (c Config) Swap(i, j int)      { c[i], c[j] = c[j], c[i] }
 func (c Config) Less(i, j int) bool { return c[i].Prefix > c[j].Prefix }
 
-func Server(conf Config) http.Handler {
+func Server(host string, conf Config) http.Handler {
 	sort.Sort(conf)
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -38,8 +38,7 @@ func Server(conf Config) http.Handler {
 			return
 		}
 
-		host, _, err := net.SplitHostPort(r.Host)
-		if err != nil {
+		if host == "" {
 			host = r.Host
 		}
 
@@ -97,5 +96,5 @@ func main() {
 		log.Fatal(err)
 	}
 
-	serve.Serve(*port, *socket, Server(config))
+	serve.Serve(*port, *socket, Server(*host, config))
 }
