@@ -51,6 +51,7 @@ func Server(host string, conf Config) http.Handler {
 
 		for _, row := range conf {
 			if strings.HasPrefix(r.URL.Path, row.Prefix) {
+				w.Header().Add("Content-Type", "text/html")
 				fmt.Fprintf(w, `<meta name="go-import" content="%s%s %s %s">`, host, row.Prefix, row.Vcs, row.Url)
 				return
 			}
