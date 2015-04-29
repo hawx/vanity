@@ -9,7 +9,7 @@ import (
 )
 
 func TestVanity(t *testing.T) {
-	server := httptest.NewServer(Server(Config{
+	server := httptest.NewServer(Server("example.org", Config{
 		{"/example", "git", "git://example.org/example"},
 		{"/", "git", "https://code.org/r/p/exproj"},
 		{"/example/pkg", "git", "git://example.org/expkg"},
@@ -19,9 +19,9 @@ func TestVanity(t *testing.T) {
 	table := []struct {
 		req, resp string
 	}{
-		{"/example?go-get=1", "127.0.0.1/example git git://example.org/example"},
-		{"/pkg/foo?go-get=1", "127.0.0.1/ git https://code.org/r/p/exproj"},
-		{"/example/pkg/foo?go-get=1", "127.0.0.1/example/pkg git git://example.org/expkg"},
+		{"/example?go-get=1", "example.org/example git git://example.org/example"},
+		{"/pkg/foo?go-get=1", "example.org/ git https://code.org/r/p/exproj"},
+		{"/example/pkg/foo?go-get=1", "example.org/example/pkg git git://example.org/expkg"},
 	}
 
 	for _, tc := range table {
@@ -38,7 +38,7 @@ func TestVanity(t *testing.T) {
 }
 
 func TestVanityNotGoTool(t *testing.T) {
-	server := httptest.NewServer(Server(Config{
+	server := httptest.NewServer(Server("example.com", Config{
 		{"/example", "git", "git://example.org/example"},
 	}))
 	defer server.Close()
@@ -48,7 +48,7 @@ func TestVanityNotGoTool(t *testing.T) {
 		t.Fatalf("Get: %v", err)
 	}
 
-	if resp.Request.URL.String() != "http://godoc.org/127.0.0.1/example" {
+	if resp.Request.URL.String() != "http://godoc.org/example.com/example" {
 		t.Fatalf("Expected redirect, Got: %s", resp.Request.URL)
 	}
 }

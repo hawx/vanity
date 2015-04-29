@@ -17,7 +17,6 @@ import (
 var (
 	port   = flag.String("port", "8080", "")
 	socket = flag.String("socket", "", "")
-	host   = flag.String("host", "", "")
 )
 
 type configRow struct {
@@ -36,10 +35,6 @@ func Server(host string, conf Config) http.Handler {
 		if r.Method != "GET" {
 			http.Error(w, "Method Not Allowed", 405)
 			return
-		}
-
-		if host == "" {
-			host = r.Host
 		}
 
 		log.Println(r.URL)
@@ -81,13 +76,14 @@ func DecodeConfig(r io.Reader) (Config, error) {
 
 func main() {
 	flag.Parse()
+	argv := flag.Args()
 
-	if len(flag.Args()) != 1 {
-		fmt.Fprint(os.Stderr, "Usage: vanity [--port PORT | --socket SOCK] CONFIG\n")
+	if len(argv) != 2 {
+		fmt.Fprint(os.Stderr, "Usage: vanity [--port PORT | --socket SOCK] HOST CONFIG\n")
 		os.Exit(1)
 	}
 
-	configFile, err := os.Open(flag.Args()[0])
+	configFile, err := os.Open(argv[1])
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -97,5 +93,5 @@ func main() {
 		log.Fatal(err)
 	}
 
-	serve.Serve(*port, *socket, Server(*host, config))
+	serve.Serve(*port, *socket, Server(argv[0], config))
 }
