@@ -11,7 +11,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/hawx/serve"
+	"hawx.me/code/serve"
 )
 
 var (
