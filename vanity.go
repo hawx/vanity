@@ -85,12 +85,14 @@ func main() {
 
 	configFile, err := os.Open(argv[1])
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return
 	}
 
 	config, err := DecodeConfig(configFile)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return
 	}
 
 	serve.Serve(*port, *socket, Server(argv[0], config))
