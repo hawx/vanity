@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"hawx.me/code/serve"
 )
@@ -23,6 +24,19 @@ type packageConfig struct {
 }
 type Config map[string]packageConfig
 
+func find(path []string, conf Config) (packageConfig, bool) {
+	if len(path) == 0 {
+		row, ok := conf["/"]
+		return row, ok
+	}
+
+	if row, ok := conf[strings.Join(path, "/")]; ok {
+		return row, true
+	}
+
+	return find(path[:len(path)-1], conf)
+}
+
 func Server(host string, conf Config) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != "GET" {
@@ -31,13 +45,13 @@ func Server(host string, conf Config) http.Handler {
 		}
 
 		log.Println(r.URL)
-		
+
 		if r.URL.Path[len(r.URL.Path)-1] == '/' {
 			http.Redirect(w, r, r.URL.Path[:len(r.URL.Path)-1], http.StatusMovedPermanently)
 			return
 		}
 
-		row, ok := conf[r.URL.Path]
+		row, ok := find(strings.Split(r.URL.Path, "/"), conf)
 		if !ok {
 			http.Error(w, "Not Found", http.StatusNotFound)
 			return
@@ -96,5 +110,12 @@ func main() {
 		return
 	}
 
-	serve.Serve(*port, *socket, Server(argv[0], config))
+	srv := &http.Server{
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
+		IdleTimeout:  120 * time.Second,
+		Handler:      Server(argv[0], config),
+	}
+
+	serve.Server(*port, *socket, srv)
 }
